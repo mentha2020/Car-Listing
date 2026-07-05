@@ -6,6 +6,7 @@ use App\Models\Car;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
+use App\Notifications\NewMessageNotification;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -62,11 +63,13 @@ class MessageController extends Controller
         );
 
         if ($request->body) {
-            $conversation->messages()->create([
+            $message = $conversation->messages()->create([
                 'user_id' => $user->id,
                 'body' => $request->body,
             ]);
             $conversation->touch();
+
+            $seller->notify(new NewMessageNotification($message));
         }
 
         return redirect()->route('messages.show', $conversation)
@@ -85,12 +88,18 @@ class MessageController extends Controller
             'body' => 'required|string|max:1000',
         ]);
 
-        $conversation->messages()->create([
+        $message = $conversation->messages()->create([
             'user_id' => $user->id,
             'body' => $request->body,
         ]);
 
         $conversation->touch();
+
+        $otherUserId = $conversation->sender_id === $user->id ? $conversation->receiver_id : $conversation->sender_id;
+        $otherUser = User::find($otherUserId);
+        if ($otherUser) {
+            $otherUser->notify(new NewMessageNotification($message));
+        }
 
         return back();
     }
