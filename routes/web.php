@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PublicCarController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,11 @@ Route::middleware(['auth', 'verified', 'client'])->group(function () {
     Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
     Route::post('/messages/{conversation}', [MessageController::class, 'send'])->name('messages.send');
     Route::post('/messages/car/{car}/user/{seller}', [MessageController::class, 'store'])->name('messages.create');
+
+    Route::get('/payments/{car}/plans', [PaymentController::class, 'showPlans'])->name('payments.plans');
+    Route::post('/payments/{car}/checkout', [PaymentController::class, 'checkout'])->name('payments.checkout');
+    Route::get('/payments/success', [PaymentController::class, 'success'])->name('payments.success');
+    Route::get('/payments/{car}/cancel', [PaymentController::class, 'cancel'])->name('payments.cancel');
 });
 
 Route::middleware('auth')->group(function () {
