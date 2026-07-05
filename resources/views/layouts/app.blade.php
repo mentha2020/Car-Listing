@@ -31,6 +31,8 @@
             <main>
                 {{ $slot }}
             </main>
+
+            <x-bottom-nav />
         </div>
         @stack('scripts')
     </body>
