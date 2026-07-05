@@ -2,12 +2,14 @@
 
 use App\Http\Controllers\CarController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PublicCarController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+Route::get('/', HomeController::class)->name('home');
+Route::get('/cars/{car}', [PublicCarController::class, 'show'])->name('cars.show');
 
 Route::get('/dashboard', DashboardController::class)
     ->middleware(['auth', 'verified'])
@@ -22,6 +24,9 @@ Route::middleware(['auth', 'verified', 'client'])->group(function () {
     Route::delete('/my-cars/{car}', [CarController::class, 'destroy'])->name('my-cars.destroy');
     Route::delete('/my-cars/{car}/images/{image}', [CarController::class, 'removeImage'])->name('my-cars.remove-image');
     Route::post('/my-cars/{car}/images/{image}/primary', [CarController::class, 'setPrimary'])->name('my-cars.set-primary');
+
+    Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
+    Route::post('/favorites/{car}/toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
 });
 
 Route::middleware('auth')->group(function () {
