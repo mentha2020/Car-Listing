@@ -5,6 +5,47 @@
         </h2>
     </x-slot>
 
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusCtx = document.getElementById('statusChart')?.getContext('2d');
+            if (statusCtx) {
+                new Chart(statusCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Pending', 'Approved', 'Rejected', 'Draft'],
+                        datasets: [{
+                            data: @json($carsByStatus),
+                            backgroundColor: ['#f59e0b', '#10b981', '#ef4444', '#6b7280'],
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+            }
+
+            const weeklyCtx = document.getElementById('weeklyChart')?.getContext('2d');
+            if (weeklyCtx) {
+                new Chart(weeklyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: @json($weeklyCars->pluck('date')->map(fn($d) => \Carbon\Carbon::parse($d)->format('M d'))),
+                        datasets: [{
+                            label: 'Cars Listed',
+                            data: @json($weeklyCars->pluck('count')),
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99,102,241,0.1)',
+                            fill: true,
+                            tension: 0.3,
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+                });
+            }
+        });
+    </script>
+    @endpush
+
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             {{-- Stats Cards --}}
@@ -27,15 +68,28 @@
                 </div>
             </div>
 
+            {{-- Charts --}}
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                {{-- Revenue --}}
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Cars by Status</h3>
+                    <div style="height: 250px;">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Weekly Listings</h3>
+                    <div style="height: 250px;">
+                        <canvas id="weeklyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Revenue</h3>
                     <div class="text-3xl font-bold text-green-600 dark:text-green-400">${{ number_format($stats['total_revenue'], 2) }}</div>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">From premium listings</p>
                 </div>
-
-                {{-- Top Cities --}}
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Top Cities</h3>
                     @forelse($topCities as $city)
