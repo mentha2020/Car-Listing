@@ -67,12 +67,10 @@ class Car extends Model
         $slug = $base;
         $counter = 1;
 
-        static::withoutGlobalScopes(function () use ($base, $counter, $slug, $car) {
-            while (static::where('slug', $slug)->where('id', '!=', $car->id ?? 0)->exists()) {
-                $slug = $base . '-' . $counter;
-                $counter++;
-            }
-        });
+        while (static::withoutGlobalScopes()->where('slug', $slug)->where('id', '!=', $car->id ?? 0)->exists()) {
+            $slug = $base . '-' . $counter;
+            $counter++;
+        }
 
         return $slug;
     }
