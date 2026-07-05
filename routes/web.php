@@ -28,12 +28,12 @@ Route::middleware(['auth', 'verified', 'client'])->group(function () {
     Route::post('/my-cars/{car}/images/{image}/primary', [CarController::class, 'setPrimary'])->name('my-cars.set-primary');
 
     Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
-    Route::post('/favorites/{car}/toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
+    Route::post('/favorites/{car}/toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle')->middleware('throttle:20,1');
 
     Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
     Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
-    Route::post('/messages/{conversation}', [MessageController::class, 'send'])->name('messages.send');
-    Route::post('/messages/car/{car}/user/{seller}', [MessageController::class, 'store'])->name('messages.create');
+    Route::post('/messages/{conversation}', [MessageController::class, 'send'])->name('messages.send')->middleware('throttle:10,1');
+    Route::post('/messages/car/{car}/user/{seller}', [MessageController::class, 'store'])->name('messages.create')->middleware('throttle:5,1');
 
     Route::get('/payments/{car}/plans', [PaymentController::class, 'showPlans'])->name('payments.plans');
     Route::post('/payments/{car}/checkout', [PaymentController::class, 'checkout'])->name('payments.checkout');
@@ -49,3 +49,4 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
+require __DIR__.'/webhook.php';

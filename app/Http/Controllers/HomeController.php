@@ -10,6 +10,41 @@ class HomeController extends Controller
 {
     public function __invoke(Request $request): View
     {
+        // If any filters are applied, show filtered results
+        $hasFilters = $request->has(['search', 'make', 'model', 'year_from', 'year_to', 'price_from', 'price_to', 'fuel_type', 'transmission', 'mileage_to', 'city']);
+
+        if ($hasFilters) {
+            return $this->filteredResults($request);
+        }
+
+        // Homepage: show featured + latest
+        $featuredCars = Car::approved()
+            ->with(['primaryImage', 'user'])
+            ->where('is_featured', true)
+            ->where('featured_until', '>', now())
+            ->take(8)
+            ->get();
+
+        $latestCars = Car::approved()
+            ->with(['primaryImage', 'user'])
+            ->latest()
+            ->take(8)
+            ->get();
+
+        $stats = [
+            'total_cars' => Car::approved()->count(),
+            'total_users' => \App\Models\User::where('role', 'client')->count(),
+            'total_cities' => Car::approved()->distinct('city')->count('city'),
+        ];
+
+        $makes = Car::approved()->distinct()->pluck('make')->sort()->values();
+        $cities = Car::approved()->distinct()->pluck('city')->sort()->values();
+
+        return view('home', compact('featuredCars', 'latestCars', 'stats', 'makes', 'cities'));
+    }
+
+    private function filteredResults(Request $request): View
+    {
         $query = Car::approved()->with(['primaryImage', 'user'])
             ->when($request->make, fn ($q, $v) => $q->byMake($v))
             ->when($request->model, fn ($q, $v) => $q->byModel($v))
@@ -25,27 +60,18 @@ class HomeController extends Controller
                    ->orWhere('description', 'like', "%{$v}%");
             }));
 
-        // Sorting
         $sort = $request->get('sort', 'newest');
-        switch ($sort) {
-            case 'price_low':
-                $query->orderBy('price', 'asc');
-                break;
-            case 'price_high':
-                $query->orderBy('price', 'desc');
-                break;
-            case 'mileage_low':
-                $query->orderBy('mileage', 'asc');
-                break;
-            default:
-                $query->latest();
-        }
+        match ($sort) {
+            'price_low' => $query->orderBy('price', 'asc'),
+            'price_high' => $query->orderBy('price', 'desc'),
+            'mileage_low' => $query->orderBy('mileage', 'asc'),
+            default => $query->latest(),
+        };
 
         $cars = $query->paginate(12)->withQueryString();
-
         $makes = Car::approved()->distinct()->pluck('make')->sort()->values();
         $cities = Car::approved()->distinct()->pluck('city')->sort()->values();
 
-        return view('home', compact('cars', 'makes', 'cities'));
+        return view('home-results', compact('cars', 'makes', 'cities'));
     }
 }

@@ -15,11 +15,11 @@
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div>
                             @if($car->images->count())
-                                <img src="{{ optional($car->primaryImage)->url ?? $car->images->first()->url }}" alt="{{ $car->year }} {{ $car->make }} {{ $car->model }}" class="w-full h-96 object-cover rounded-lg">
+                                <img src="{{ optional($car->primaryImage)->url ?? $car->images->first()->url }}" alt="{{ $car->year }} {{ $car->make }} {{ $car->model }}" class="w-full h-96 object-cover rounded-lg" loading="eager">
                                 @if($car->images->count() > 1)
                                     <div class="flex gap-2 mt-4 overflow-x-auto">
                                         @foreach($car->images as $image)
-                                            <img src="{{ $image->url }}" alt="" class="w-20 h-20 object-cover rounded cursor-pointer border-2 {{ $image->is_primary ? 'border-indigo-500' : 'border-transparent' }}">
+                                            <img src="{{ $image->url }}" alt="" class="w-20 h-20 object-cover rounded cursor-pointer border-2 {{ $image->is_primary ? 'border-indigo-500' : 'border-transparent' }}" loading="lazy">
                                         @endforeach
                                     </div>
                                 @endif
